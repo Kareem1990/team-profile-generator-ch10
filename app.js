@@ -1,8 +1,10 @@
 const inquirer = require("inquirer");
-
+const fs = require("fs");
 const Manager = require("./lib/Manager");
 const Engineer = require("./lib/Engineer");
 const Intern = require("./lib/Intern");
+const { writeFile } = require("./utils/generate-page.js");
+const generateForm = require("./src/generateForm");
 
 const employeesGroup = [];
 
@@ -34,7 +36,7 @@ const promptManager = () => {
 
 };
 
-const promptEmployee = (employeeAnswers)  => {
+const promptEmp = (employeeAnswers)  => {
 
     console.log(`
     ==================
@@ -47,56 +49,55 @@ const promptEmployee = (employeeAnswers)  => {
           type: "list",
           name: "choice",
           message: "Would you like to add the following employee or finish?",
-          choices: ["engineer", "intern", "finish building my team"],
+          choices: ["engineer", "intern", "no more employees"],
         },
       ])
       .then((answer) => {
-        //console.log(answer, answer.choice);
         if (answer.choice == "engineer") {
           return inquirer
             .prompt([
               {
                 type: "input",
-                name: "engineer_name",
+                name: "engineer-name",
                 message: "Enter the engineer's name?",
               },
               {
                 type: "input",
-                name: "engineer_empid",
+                name: "engineer-empid",
                 message: "Provide the engineer's employee ID:",
               },
               {
                 type: "input",
-                name: "engineer_email",
-                message: "Provide the engineer's email address:",
+                name: "engineer-email",
+                message: "Enter the engineer's email:",
               },
   
               {
                 type: "input",
-                name: "github",
-                message: "Enter the engineer's GitHub Username",
+                name: "engineer-github",
+                message: "Enter GitHub account",
               },
   
               {
                 type: "confirm",
-                name: "confirmAddEmployee",
+                name: "addEmployee",
                 message: "Would you like to enter another employee?",
                 default: false,
               },
             ])
-            .then((engineerData) => {
+            .then((engineerInfo) => {
               const engineer = new Engineer(
-                engineerData.engineer_name,
-                engineerData.engineer_empid,
-                engineerData.engineer_email,
-                engineerData.github
+                engineerInfo.engineer_name,
+                engineerInfo.engineer_empid,
+                engineerInfo.engineer_email,
+                engineerInfo.github
               );
               employeesGroup.push(engineer);
 
-              if (engineerData.confirmAddEmployee) {
-                return promptEmployee(employeeAnswers);
+              if (engineerInfo.confirmAddEmployee) {
+                return promptEmp(employeeAnswers);
               } else {
-                let htmlfile = generatePage(employeesGroup);
+                let htmlfile = generateForm(employeesGroup);
                 writeToFile("./dist/index.html", htmlfile);
               }
             });
@@ -131,26 +132,26 @@ const promptEmployee = (employeeAnswers)  => {
                 default: false,
               },
             ])
-            .then((internData) => {
+            .then((internInfo) => {
               const intern = new Intern(
-                internData.intern_name,
-                internData.intern_empid,
-                internData.intern_email,
-                internData.school
+                internInfo.intern_name,
+                internInfo.intern_empid,
+                internInfo.intern_email,
+                internInfo.school
               );
   
               employeesGroup.push(intern);
   
-              if (internData.confirmAddEmployee) {
-                return promptEmployee(employeeAnswers);
+              if (internInfo.confirmAddEmployee) {
+                return promptEmp(employeeAnswers);
               } else {
-                let htmlfile = generatePage(employeesGroup);
+                let htmlfile = generateForm(employeesGroup);
                 writeToFile("./dist/index.html", htmlfile);
               }
             });
         } else {
           console.log(employeeAnswers);
-          let htmlfile = generatePage(employeesGroup);
+          let htmlfile = generateForm(employeesGroup);
           writeToFile("./dist/index.html", htmlfile);
         }
       });
@@ -175,8 +176,10 @@ const promptEmployee = (employeeAnswers)  => {
         employeeAnswers.manager_name,
         employeeAnswers.manager_empid,
         employeeAnswers.manager_email,
-        employeeAnswers.manager_office
+        employeeAnswers.manager_office,
+
+        console.log(employeeAnswers)
     );
     employeesGroup.push(manager);
-    promptEmployee();
+    promptEmp();
   });
